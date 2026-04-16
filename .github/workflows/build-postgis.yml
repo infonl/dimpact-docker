@@ -1,0 +1,77 @@
+#
+# SPDX-FileCopyrightText: 2026 INFO.nl
+# SPDX-License-Identifier: EUPL-1.2+
+#
+name: Build postgis
+
+on:
+  workflow_dispatch:
+env:
+  POSTGIS_VERSION: 17-3.5
+
+permissions:
+  packages: write
+
+jobs:
+  build-arm64:
+    name: Build arm64 image
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check out postgis ${{ env.POSTGIS_VERSION }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: postgis/docker-postgis
+          ref: ${{ env.POSTGIS_VERSION }}
+
+      - name: Build postgis ${{ env.POSTGIS_VERSION }} for arm64
+        run: |
+          (cd ${{ env.POSTGIS_VERSION }}; docker build --tag ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-arm64 .)
+          docker push ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-arm64
+
+  build-amd64:
+    name: Build amd64 image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check out postgis ${{ env.POSTGIS_VERSION }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: postgis/docker-postgis
+          ref: ${{ env.POSTGIS_VERSION }}
+
+      - name: Build postgis ${{ env.POSTGIS_VERSION }} for amd64
+        run: |
+          (cd ${{ env.POSTGIS_VERSION }}; docker build --tag ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-amd64 .)
+          docker push ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-amd64
+
+  merge-manifest:
+    name: Merge manifest list
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest
+        run: |
+          docker manifest create ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-amd64 \
+            ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}-arm64
+          docker manifest push ghcr.io/${{ github.repository_owner }}/postgis:${{ env.POSTGIS_VERSION }}
