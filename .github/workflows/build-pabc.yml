@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: Platform-Autorisatie-Beheer-Component/PABC-API
-          ref: ${{ env.PABC_VERSION }}
+          ref: v${{ env.PABC_VERSION }}
 
       - name: Build pabc ${{ env.PABC_VERSION }} for amd64
         run: |
