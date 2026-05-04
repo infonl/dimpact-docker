@@ -10,11 +10,10 @@ on:
       postgis_version:
         description: 'PostGIS version to build'
         required: false
-        default: {{ POSTGIS_VERSION }}
+        default: '17-3.5'
 
 env:
-  POSTGIS_VERSION: 17-3.5
-  BUILD_VERSION: ${{ inputs.postgis_version || POSTGIS_VERSION }}
+  BUILD_VERSION: ${{ inputs.postgis_version }}
 
 permissions:
   packages: write
