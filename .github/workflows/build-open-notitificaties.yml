@@ -6,8 +6,14 @@ name: Build open-notificaties
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: false
+        default: '1.13.0'
+
 env:
-  OPEN_NOTIFICATIES_VERSION: 1.13.0
+  BUILD_VERSION: ${{ inputs.version }}
 
 permissions:
   packages: write
@@ -24,16 +30,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check out open-notificaties ${{ env.OPEN_NOTIFICATIES_VERSION }}
+      - name: Check out open-notificaties ${{ env.BUILD_VERSION }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: open-zaak/open-notificaties
-          ref: ${{ env.OPEN_NOTIFICATIES_VERSION }}
+          ref: ${{ env.BUILD_VERSION }}
 
-      - name: Build open-notificaties ${{ env.OPEN_NOTIFICATIES_VERSION }} for arm64
+      - name: Build open-notificaties ${{ env.BUILD_VERSION }} for arm64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-arm64 .
-          docker push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-arm64
+          docker build --tag ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-arm64 .
+          docker push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-arm64
 
   build-amd64:
     name: Build amd64 image
@@ -46,16 +52,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check out open-notificaties ${{ env.OPEN_NOTIFICATIES_VERSION }}
+      - name: Check out open-notificaties ${{ env.BUILD_VERSION }}
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: open-zaak/open-notificaties
-          ref: ${{ env.OPEN_NOTIFICATIES_VERSION }}
+          ref: ${{ env.BUILD_VERSION }}
 
-      - name: Build open-notificaties ${{ env.OPEN_NOTIFICATIES_VERSION }} for amd64
+      - name: Build open-notificaties ${{ env.BUILD_VERSION }} for amd64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-amd64 .
-          docker push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-amd64
+          docker build --tag ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-amd64 .
+          docker push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-amd64
 
   merge-manifest:
     name: Merge manifest list
@@ -71,7 +77,7 @@ jobs:
 
       - name: Create manifest
         run: |
-          docker manifest create ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }} \
-            ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-amd64 \
-            ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}-arm64
-          docker manifest push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.OPEN_NOTIFICATIES_VERSION }}
+          docker manifest create ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-amd64 \
+            ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}-arm64
+          docker manifest push ghcr.io/${{ github.repository_owner }}/open-notificaties:${{ env.BUILD_VERSION }}
