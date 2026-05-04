@@ -7,13 +7,13 @@ name: Build test
 on:
   workflow_dispatch:
     inputs:
-      postgis_version:
-        description: 'PostGIS version to build'
+      version:
+        description: 'Version to build'
         required: false
         default: '17-3.5'
 
 env:
-  BUILD_VERSION: ${{ inputs.postgis_version }}
+  BUILD_VERSION: ${{ inputs.version }}
 
 permissions:
   packages: write
@@ -34,7 +34,3 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: postgis/docker-postgis
-
-      - name: Build postgis ${{ env.BUILD_VERSION }} for amd64
-        run: |
-          (cd ${{ env.BUILD_VERSION }}; docker build --tag ghcr.io/${{ github.repository_owner }}/postgis:${{ env.BUILD_VERSION }}-amd64 .)
