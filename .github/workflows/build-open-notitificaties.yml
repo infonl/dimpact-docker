@@ -10,6 +10,7 @@ on:
       version:
         description: 'Version to build'
         required: false
+        # renovate: datasource=docker depName=openzaak/open-notificaties
         default: '1.13.0'
 
 env:

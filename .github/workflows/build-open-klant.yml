@@ -10,6 +10,7 @@ on:
       version:
         description: 'Version to build'
         required: false
+        # renovate: datasource=docker depName=maykinmedia/open-klant
         default: '2.14.0'
 
 env:

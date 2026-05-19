@@ -10,6 +10,7 @@ on:
       version:
         description: 'Version to build'
         required: false
+        # renovate: datasource=docker depName=openzaak/open-zaak
         default: '1.27.1'
 
 env:

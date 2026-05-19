@@ -17,7 +17,28 @@
     "team:dimpact"
   ],
   "prConcurrentLimit": 5,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["\\.github/workflows/build-.*\\.yml$"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s+default: '(?<currentValue>[^']+)'"
+      ]
+    }
+  ],
   "packageRules": [
+    {
+      "matchFileNames": [".github/workflows/build-*.yml"],
+      "matchDatasources": ["docker"],
+      "pinDigests": false,
+      "description": ["Build workflows track upstream versions, not Docker image references"]
+    },
+    {
+      "matchPackageNames": ["postgis/postgis"],
+      "matchDatasources": ["docker"],
+      "versioning": "regex:^(?<compatibility>\\d+)-(?<major>\\d+)\\.(?<minor>\\d+)$",
+      "description": ["PostGIS version format is <postgres_major>-<postgis_major>.<postgis_minor>"]
+    },
     {
       "groupName": "Platform Autorisatie Beheer Component (PABC)",
       "matchPackageNames": [

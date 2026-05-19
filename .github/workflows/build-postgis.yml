@@ -10,6 +10,7 @@ on:
       version:
         description: 'Version to build'
         required: false
+        # renovate: datasource=docker depName=postgis/postgis
         default: '17-3.5'
 
 env:
