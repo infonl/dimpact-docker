@@ -20,7 +20,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["\\.github/workflows/build-.*\\.yml$"],
+      "managerFilePatterns": [
+        "/\\.github/workflows/build-.*\\.yml$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s+default: '(?<currentValue>[^']+)'"
       ]
