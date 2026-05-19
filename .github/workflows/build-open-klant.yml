@@ -11,7 +11,7 @@ on:
         description: 'Version to build'
         required: false
         # renovate: datasource=docker depName=maykinmedia/open-klant
-        default: '2.15.0'
+        default: '2.16.0'
 
 env:
   BUILD_VERSION: ${{ inputs.version }}
