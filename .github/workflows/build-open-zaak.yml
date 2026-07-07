@@ -39,7 +39,11 @@ jobs:
 
       - name: Build open-zaak ${{ env.BUILD_VERSION }} for arm64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-arm64 .
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-arm64 \
+            --build-arg COMMIT_HASH=${{ github.sha }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+            .
           docker push ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-arm64
 
   build-amd64:
@@ -61,7 +65,11 @@ jobs:
 
       - name: Build open-zaak ${{ env.BUILD_VERSION }} for amd64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-amd64 .
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-amd64 \
+            --build-arg COMMIT_HASH=${{ github.sha }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+          .
           docker push ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-amd64
 
   merge-manifest:
