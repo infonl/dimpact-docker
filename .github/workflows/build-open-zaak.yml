@@ -37,11 +37,15 @@ jobs:
           repository: open-zaak/open-zaak
           ref: ${{ env.BUILD_VERSION }}
 
+      - name: Get commit SHA
+        id: get-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: Build open-zaak ${{ env.BUILD_VERSION }} for arm64
         run: |
           docker build \
             --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-arm64 \
-            --build-arg COMMIT_HASH=${{ github.sha }} \
+            --build-arg COMMIT_HASH=${{ steps.get-sha.outputs.sha }} \
             --build-arg RELEASE=${{ env.BUILD_VERSION }} \
             .
           docker push ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-arm64
@@ -67,7 +71,7 @@ jobs:
         run: |
           docker build \
             --tag ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-amd64 \
-            --build-arg COMMIT_HASH=${{ github.sha }} \
+            --build-arg COMMIT_HASH=${{ steps.get-sha.outputs.sha }} \
             --build-arg RELEASE=${{ env.BUILD_VERSION }} \
           .
           docker push ghcr.io/${{ github.repository_owner }}/open-zaak:${{ env.BUILD_VERSION }}-amd64
