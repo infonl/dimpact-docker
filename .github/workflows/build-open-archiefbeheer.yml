@@ -32,6 +32,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check out open-archiefbeheer ${{ env.BUILD_VERSION }}
+        id: checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: maykinmedia/open-archiefbeheer
@@ -39,7 +40,11 @@ jobs:
 
       - name: Build open-archiefbeheer ${{ env.BUILD_VERSION }} for arm64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-arm64 .
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-arm64 \
+            --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+            .
           docker push ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-arm64
 
   build-amd64:
@@ -54,6 +59,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check out open-archiefbeheer ${{ env.BUILD_VERSION }}
+        id: checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: maykinmedia/open-archiefbeheer
@@ -61,7 +67,11 @@ jobs:
 
       - name: Build open-archiefbeheer ${{ env.BUILD_VERSION }} for amd64
         run: |
-          docker build --tag ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-amd64 .
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-amd64 \
+            --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+            .
           docker push ghcr.io/${{ github.repository_owner }}/open-archiefbeheer:${{ env.BUILD_VERSION }}-amd64
 
   merge-manifest:
