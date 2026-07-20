@@ -12,17 +12,45 @@ on:
         required: false
         # renovate: datasource=docker depName=maykinmedia/open-klant
         default: '2.16.0'
-
-env:
-  BUILD_VERSION: ${{ inputs.version }}
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build-open-klant.yml
 
 permissions:
   packages: write
+  contents: read
 
 jobs:
+  determine-version:
+    name: Determine version to build
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Resolve version to build
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            version="$INPUT_VERSION"
+          else
+            version="$(grep -oP "^\s+default: '\K[^']+" .github/workflows/build-open-klant.yml | head -n 1)"
+          fi
+          echo "Resolved version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
   build-arm64:
     name: Build arm64 image
+    needs: determine-version
     runs-on: ubuntu-24.04-arm
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
@@ -49,7 +77,10 @@ jobs:
 
   build-amd64:
     name: Build amd64 image
-    runs-on: ubuntu-latest
+    needs: determine-version
+    runs-on: ubuntu-24.04
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
@@ -76,8 +107,10 @@ jobs:
 
   merge-manifest:
     name: Merge manifest list
-    needs: [build-amd64, build-arm64]
-    runs-on: ubuntu-latest
+    needs: [determine-version, build-amd64, build-arm64]
+    runs-on: ubuntu-24.04
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
