@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 INFO.nl
 # SPDX-License-Identifier: EUPL-1.2+
 #
-name: Build objects-api
+name: Build open-object
 
 on:
   workflow_dispatch:
@@ -10,13 +10,13 @@ on:
       version:
         description: 'Version to build'
         required: false
-        # renovate: datasource=docker depName=maykinmedia/objects-api
-        default: '3.6.2'
+        # renovate: datasource=docker depName=maykinmedia/open-object
+        default: '4.0.2'
   push:
     branches:
       - main
     paths:
-      - .github/workflows/build-objects-api.yml
+      - .github/workflows/build-open-object.yml
 
 permissions:
   packages: write
@@ -40,7 +40,7 @@ jobs:
           if [ -n "$INPUT_VERSION" ]; then
             version="$INPUT_VERSION"
           else
-            version="$(grep -oP "^\s+default: '\K[^']+" .github/workflows/build-objects-api.yml | head -n 1)"
+            version="$(grep -oP "^\s+default: '\K[^']+" .github/workflows/build-open-object.yml | head -n 1)"
           fi
           echo "Resolved version: $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -59,21 +59,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check out objects-api ${{ env.BUILD_VERSION }}
+      - name: Check out open-object ${{ env.BUILD_VERSION }}
         id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: maykinmedia/objects-api
+          repository: maykinmedia/open-object
           ref: ${{ env.BUILD_VERSION }}
 
-      - name: Build objects-api ${{ env.BUILD_VERSION }} for arm64
+      - name: Build open-object ${{ env.BUILD_VERSION }} for arm64
         run: |
           docker build \
-            --tag ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-arm64 \
             --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
             --build-arg RELEASE=${{ env.BUILD_VERSION }} \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-arm64
+          docker push ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-arm64
 
   build-amd64:
     name: Build amd64 image
@@ -89,21 +89,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check out objects-api ${{ env.BUILD_VERSION }}
+      - name: Check out open-object ${{ env.BUILD_VERSION }}
         id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: maykinmedia/objects-api
+          repository: maykinmedia/open-object
           ref: ${{ env.BUILD_VERSION }}
 
-      - name: Build objects-api ${{ env.BUILD_VERSION }} for amd64
+      - name: Build open-object ${{ env.BUILD_VERSION }} for amd64
         run: |
           docker build \
-            --tag ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-amd64 \
+            --tag ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-amd64 \
             --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
             --build-arg RELEASE=${{ env.BUILD_VERSION }} \
             .
-          docker push ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-amd64
+          docker push ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-amd64
 
   merge-manifest:
     name: Merge manifest list
@@ -121,7 +121,7 @@ jobs:
 
       - name: Create manifest
         run: |
-          docker manifest create ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }} \
-            ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-amd64 \
-            ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}-arm64
-          docker manifest push ghcr.io/${{ github.repository_owner }}/objects-api:${{ env.BUILD_VERSION }}
+          docker manifest create ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-amd64 \
+            ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}-arm64
+          docker manifest push ghcr.io/${{ github.repository_owner }}/open-object:${{ env.BUILD_VERSION }}
