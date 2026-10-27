@@ -1,0 +1,127 @@
+#
+# SPDX-FileCopyrightText: 2026 INFO.nl
+# SPDX-License-Identifier: EUPL-1.2+
+#
+name: Build vng-selectielijst
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: false
+        # renovate: datasource=docker depName=openzaak/vng-selectielijst
+        default: '1.0.5'
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build-vng-selectielijst.yml
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  determine-version:
+    name: Determine version to build
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Resolve version to build
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            version="$INPUT_VERSION"
+          else
+            version="$(grep -oP "^\s+default: '\K[^']+" .github/workflows/build-vng-selectielijst.yml | head -n 1)"
+          fi
+          echo "Resolved version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build-arm64:
+    name: Build arm64 image
+    needs: determine-version
+    runs-on: ubuntu-24.04-arm
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check out vng-selectielijst ${{ env.BUILD_VERSION }}
+        id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: openzaak/vng-selectielijst
+          ref: ${{ env.BUILD_VERSION }}
+
+      - name: Build vng-selectielijst ${{ env.BUILD_VERSION }} for arm64
+        run: |
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-arm64 \
+            --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+            .
+          docker push ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-arm64
+
+  build-amd64:
+    name: Build amd64 image
+    needs: determine-version
+    runs-on: ubuntu-24.04
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check out vng-selectielijst ${{ env.BUILD_VERSION }}
+        id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: open-zaak/vng-selectielijst
+          ref: ${{ env.BUILD_VERSION }}
+
+      - name: Build vng-selectielijst ${{ env.BUILD_VERSION }} for amd64
+        run: |
+          docker build \
+            --tag ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-amd64 \
+            --build-arg COMMIT_HASH=${{ steps.checkout.outputs.commit }} \
+            --build-arg RELEASE=${{ env.BUILD_VERSION }} \
+          .
+          docker push ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-amd64
+
+  merge-manifest:
+    name: Merge manifest list
+    needs: [determine-version, build-amd64, build-arm64]
+    runs-on: ubuntu-24.04
+    env:
+      BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest
+        run: |
+          docker manifest create ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }} \
+            ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-amd64 \
+            ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}-arm64
+          docker manifest push ghcr.io/${{ github.repository_owner }}/vng-selectielijst:${{ env.BUILD_VERSION }}
