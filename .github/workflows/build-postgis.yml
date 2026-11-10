@@ -11,7 +11,7 @@ on:
         description: 'Version to build'
         required: false
         # renovate: datasource=docker depName=postgis/postgis
-        default: '17-3.6'
+        default: '18-3.7'
   push:
     branches:
       - main
