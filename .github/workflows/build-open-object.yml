@@ -25,7 +25,7 @@ permissions:
 jobs:
   determine-version:
     name: Determine version to build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
@@ -48,7 +48,7 @@ jobs:
   build-arm64:
     name: Build arm64 image
     needs: determine-version
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     env:
       BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
@@ -78,7 +78,7 @@ jobs:
   build-amd64:
     name: Build amd64 image
     needs: determine-version
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
@@ -108,7 +108,7 @@ jobs:
   merge-manifest:
     name: Merge manifest list
     needs: [determine-version, build-amd64, build-arm64]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       BUILD_VERSION: ${{ needs.determine-version.outputs.version }}
     steps:
